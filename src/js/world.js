@@ -1,4 +1,5 @@
 let diffusionConstant = .2;
+let eStaticConstant = .1;
 let NaKPumpSpeedConstant = .05;
 
 function _World() {
@@ -44,8 +45,8 @@ function Grid(_width, _height) {
     for (let y = 0; y < Self.height; y++)
     {
       Self[x][y] = new GridSquare(x, y);
-      Self[x][y].Cna = .5;
-      Self[x][y].Ck = .5;
+      Self[x][y].Cna = .1;
+      Self[x][y].Ck = .1;
 
 
       if (y == membraneY) 
@@ -184,13 +185,16 @@ function GridSquare(x, y) {
 
   this.calcDiffusionDeltas = function() {
     let neighbours = getNeighbours();
+
     if (This.NaDiffusable()) 
     {
       for (let neighbour of neighbours)
       {
         if (!neighbour.NaDiffusable()) continue;
-        let dCna = this.Cna - neighbour.Cna;
-        let dIons = dCna * diffusionConstant * .5;
+        let dEStatic = this.Cna + this.Ck - neighbour.Cna - neighbour.Ck;
+
+        let dC = this.Cna - neighbour.Cna;
+        let dIons = (dC * diffusionConstant + dEStatic * eStaticConstant) * .5;
 
         this.Cna      -= dIons;
         neighbour.Cna += dIons;
@@ -201,8 +205,9 @@ function GridSquare(x, y) {
       for (let neighbour of neighbours)
       {
         if (!neighbour.KDiffusable()) continue;
-        let dCk = this.Ck - neighbour.Ck;
-        let dIons = dCk * diffusionConstant * .5;
+        let dEStatic = this.Cna + this.Ck - neighbour.Cna - neighbour.Ck;
+        let dC = this.Ck - neighbour.Ck;
+        let dIons = (dC * diffusionConstant + dEStatic * eStaticConstant) * .5;
         
         this.Ck      -= dIons;
         neighbour.Ck += dIons;
