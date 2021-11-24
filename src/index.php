@@ -8,7 +8,7 @@
  		<title>NeuronSim - Florisweb</title>
 	</head>	
 	<body>
-		<canvas id='simCanvas' width='1000' height='500'></canvas>
+		<canvas id='simCanvas' width='1000' height='1000'></canvas>
 		<script src='main_min.js'></script>
 	</body>
 </html>	

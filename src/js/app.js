@@ -10,6 +10,7 @@ const World = new _World();
 function _App() {
   this.setup = async function() {
     Drawer.setup();
+    World.setup();
   }
 
 
