@@ -1,20 +1,22 @@
-let diffusionConstant = .1;
-let NaKPumpSpeedConstant = .01;
+let diffusionConstant = .2;
+let NaKPumpSpeedConstant = .05;
 
 function _World() {
   this.grid = new Grid(50, 20);
+  this.speed = 0;
+  this.updates = 0;
   
 
   
-
   this.setup = async function() {
     this.update();
   }
 
   this.update = function() {
+    this.updates++;
     this.grid.diffuse();
     this.grid.update();
-    setTimeout(() => {World.update()}, 10);
+    setTimeout(() => {World.update()}, World.speed);
   }
 
   this.calcMembranePotentialAtX = function(_x) {
@@ -56,8 +58,8 @@ function Grid(_width, _height) {
 
         // Self[x][y].closed = true; //Math.random() > .5;
         if (x == 0) Self[x][y].type = 4;
-        if (x == 15) Self[x][y].type = 2;
-        if (x == 16) Self[x][y].type = 3;
+        if (x > 20) Self[x][y].type = 2;
+        if (x == 46) Self[x][y].type = 3;
 
       }
       if (y > membraneY) Self[x][y].isCytoplasm = true;
@@ -133,7 +135,7 @@ function GridSquare(x, y) {
   this.y = y;
 
   this.type = 0;
-  this.closed = false;
+  this.closed = true;
   this.isCytoplasm = false;
   // 0 = empty
   // 1 = cell-membrane
@@ -157,6 +159,12 @@ function GridSquare(x, y) {
   }
 
   this.update = function() {
+    if (this.type == 2 && World.updates % 1000 == 0) // only updates every 100 updates
+    {
+      this.closed = World.calcMembranePotentialAtX(this.x) > -.2;
+    };
+
+
     if (this.type != 4) return;
     let dCUnit = NaKPumpSpeedConstant;
     if (World.grid[this.x][this.y - 1].Ck < 2 * dCUnit) dCUnit = World.grid[this.x][this.y - 1].Ck / 2;

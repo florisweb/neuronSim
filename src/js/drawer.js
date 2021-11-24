@@ -27,18 +27,18 @@ function _Drawer() {
   }
 
   function drawGridSquare(_square) {
-    ctx.fillStyle = 'rgba(' + _square.Cna * 255 + ', ' + _square.Ck * 255 + ', 255, .5)';
+    ctx.fillStyle = 'rgba(' + _square.Cna * 255 + ', ' + _square.Ck * 255 + ', 0, .5)';
     if (_square.type == 1) ctx.fillStyle = '#aaa';
     if (_square.type == 2) ctx.strokeStyle = '#f00';
     if (_square.type == 3) ctx.strokeStyle = '#0f0';
     if (_square.type == 4) ctx.strokeStyle = '#00f';
-    if (_square.closed) ctx.fillStyle = ctx.strokeStyle;
 
     ctx.beginPath();
     if (_square.type <= 1)
     {
       ctx.fillRect(_square.x * squareWidth, _square.y * squareHeight, squareWidth, squareHeight);
     } else {
+      if (_square.closed) ctx.fillStyle = ctx.strokeStyle;
       ctx.rect(_square.x * squareWidth, _square.y * squareHeight, squareWidth, squareHeight);
     }
     ctx.closePath();
