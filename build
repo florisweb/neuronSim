@@ -1,0 +1,17 @@
+#!/bin/bash
+cd "$(dirname "$0")"
+echo - Building JavaScript
+
+cat src/js/drawer.js src/js/world.js src/js/app.js > dist/main_min.js
+
+cd "$(dirname "$0")"
+echo - Building CSS
+
+cat src/css/component.css src/css/main.css > dist/main_min.css
+
+cp -r src/images dist
+cp src/index.php dist/index.php
+
+echo \|-------------------\|
+echo \| Finished Building \|
+echo \|-------------------\|
