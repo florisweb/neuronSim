@@ -1,7 +1,8 @@
-const diffusionConstant = .5;
+let diffusionConstant = .1;
+let NaKPumpSpeedConstant = .01;
 
 function _World() {
-  this.grid = new Grid(50, 50);
+  this.grid = new Grid(50, 20);
   
 
   
@@ -12,7 +13,20 @@ function _World() {
 
   this.update = function() {
     this.grid.diffuse();
+    this.grid.update();
     setTimeout(() => {World.update()}, 10);
+  }
+
+  this.calcMembranePotentialAtX = function(_x) {
+    let chargeCytoplasm = this.grid[_x][membraneY + 1].Cna + this.grid[_x][membraneY + 1].Ck;
+    let chargeExtracellular = this.grid[_x][membraneY - 1].Cna + this.grid[_x][membraneY - 1].Ck;
+
+    return chargeCytoplasm - chargeExtracellular;
+  }
+  this.calcMembranePotential = function() {
+    let totalDpot = 0;
+    for (let x = 0; x < this.grid.width; x++) totalDpot += this.calcMembranePotentialAtX(x);
+    return totalDpot / this.grid.width;
   }
 }
 
@@ -28,10 +42,39 @@ function Grid(_width, _height) {
     for (let y = 0; y < Self.height; y++)
     {
       Self[x][y] = new GridSquare(x, y);
-      if (y == membraneY && x != 15) Self[x][y].type = 1;
+      Self[x][y].Cna = .5;
+      Self[x][y].Ck = .5;
+
+
+      if (y == membraneY) 
+      {
+        Self[x][y].type = 1;
+        // if (x % 4 == 0) Self[x][y].type = 2;
+        // if (x % 4 == 2) Self[x][y].type = 3;
+        // if (x % 4 == 2) Self[x][y].type = 3;
+        // if (Math.random() > .8) Self[x][y].type = 4;
+
+        // Self[x][y].closed = true; //Math.random() > .5;
+        if (x == 0) Self[x][y].type = 4;
+        if (x == 15) Self[x][y].type = 2;
+        if (x == 16) Self[x][y].type = 3;
+
+      }
       if (y > membraneY) Self[x][y].isCytoplasm = true;
     }
   } 
+
+
+  Self.update = function() {
+    for (let y = 0; y < Self.height; y++)
+    {
+      for (let x = 0; x < Self.width; x++)
+      {
+        Self[x][y].update();
+      }
+    } 
+  }
+
 
   Self.diffuse = function() {
     // Calculate changes
@@ -90,11 +133,14 @@ function GridSquare(x, y) {
   this.y = y;
 
   this.type = 0;
+  this.closed = false;
   this.isCytoplasm = false;
   // 0 = empty
   // 1 = cell-membrane
   // 2 = Na-channel?
   // 3 = K-channel?
+  // 4 = Na/K-pump
+
 
 
   this.Cna = 0;
@@ -103,24 +149,56 @@ function GridSquare(x, y) {
   this.dCna = 0;
   this.dCk = 0;
 
+  this.NaDiffusable = function() {
+    return this.type == 0 || (this.type == 2 && !this.closed);
+  }
+  this.KDiffusable = function() {
+    return this.type == 0 || (this.type == 3 && !this.closed);
+  }
+
+  this.update = function() {
+    if (this.type != 4) return;
+    let dCUnit = NaKPumpSpeedConstant;
+    if (World.grid[this.x][this.y - 1].Ck < 2 * dCUnit) dCUnit = World.grid[this.x][this.y - 1].Ck / 2;
+    if (World.grid[this.x][this.y + 1].Cna < 3 * dCUnit) 
+    {
+      let newDCUnit = World.grid[this.x][this.y + 1].Ck / 3;
+      if (newDCUnit < dCUnit) dCUnit = newDCUnit;
+    }
+
+
+    World.grid[this.x][this.y - 1].Cna  += 3 * dCUnit;
+    World.grid[this.x][this.y - 1].Ck   -= 2 * dCUnit;
+    World.grid[this.x][this.y + 1].Cna  -= 3 * dCUnit;
+    World.grid[this.x][this.y + 1].Ck   += 2 * dCUnit;
+  }
+
 
   this.calcDiffusionDeltas = function() {
-    if (this.type != 0) return;
     let neighbours = getNeighbours();
-    for (let neighbour of neighbours)
+    if (This.NaDiffusable()) 
     {
-      if (neighbour.type != 0) continue;
-      let dCna = this.Cna - neighbour.Cna;
-      let dCk = this.Ck - neighbour.Ck;
-      // let dCk = this.Cna - neighbour.Cna;
+      for (let neighbour of neighbours)
+      {
+        if (!neighbour.NaDiffusable()) continue;
+        let dCna = this.Cna - neighbour.Cna;
+        let dIons = dCna * diffusionConstant * .5;
 
-      let dNaIons = dCna * diffusionConstant * .5;
-      let dKIons = dCk * diffusionConstant * .5;
-
-      this.Cna      -= dNaIons;
-      neighbour.Cna += dNaIons;
-      this.Ck       -= dKIons;
-      neighbour.Ck  += dKIons;
+        this.Cna      -= dIons;
+        neighbour.Cna += dIons;
+      }
+    }
+    if (This.KDiffusable()) 
+    {
+      for (let neighbour of neighbours)
+      {
+        if (!neighbour.KDiffusable()) continue;
+        let dCk = this.Ck - neighbour.Ck;
+        let dIons = dCk * diffusionConstant * .5;
+        
+        this.Ck      -= dIons;
+        neighbour.Ck += dIons;
+      }
     }
   }
 
