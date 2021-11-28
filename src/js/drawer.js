@@ -44,14 +44,18 @@ function _Drawer() {
     if (_square.type <= 1)
     {
       ctx.fillRect(_square.x * squareWidth, _square.y * squareHeight, squareWidth, squareHeight);
+      for (let i = 0; i < Ions.length; i++) 
+      {
+        ctx.fillText(
+          Math.round(_square.concentrations[i] * 100) / 100 + ' ' + Ions[i].name,
+          _square.x * squareWidth + squareWidth * .1, 
+          _square.y * squareHeight + squareHeight * (.2 + i * .15)
+        );
+      }
+     
       ctx.fillText(
-        Math.round(_square.concentrations[0] * 100) / 100, 
-        _square.x * squareWidth, 
-        _square.y * squareHeight + squareHeight * .5
-      );
-      ctx.fillText(
-        Math.round(_square.calcVoltage({concentrations: [1, 1, 1]}) * 1000) / 1000 + 'V', 
-        _square.x * squareWidth, 
+        Math.round(_square.calcVoltage({concentrations: [0, 0, 0]}) * 1000) / 1000 + 'V', 
+        _square.x * squareWidth + squareWidth * .1, 
         _square.y * squareHeight + squareHeight * .75
       );
 

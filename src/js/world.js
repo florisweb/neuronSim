@@ -38,7 +38,7 @@ function _World() {
 
   this.grid = new Grid(5, 2, this);
   this.speed = 1;
-  this.FPS = 60;
+  this.FPS = 100;
   this.updates = 0;
   
 
@@ -206,7 +206,7 @@ function GridSquare(x, y) {
       return This.type == 0 || (This.type == 3 && !This.closed);
     },
     () => {
-      return x != 1;
+      return true;//x != 1;
     }
   ];
 
@@ -255,11 +255,21 @@ function GridSquare(x, y) {
 
 
   this.calcVoltage = function(_other) {
+    // let voltage = 0;
+
+    // for (let i = 0; i < Ions.length; i++)
+    // {
+    //   let cRatio = this.concentrations[i] / _other.concentrations[i];
+    //   if (isNaN(cRatio)) continue;
+    //   voltage += Constants.gas * Constants.temperature / (Constants.faraday * Ions[i].charge) * Math.log(cRatio);
+    // }
+    // return voltage;
+
     let sumSelf = 0;
-    for (let ionConcentration of this.concentrations) sumSelf += ionConcentration;
+    for (let i = 0; i < Ions.length; i++) sumSelf += this.concentrations[i] * Ions[i].charge;
     
     let sumOther = 0;
-    for (let ionConcentration of _other.concentrations) sumOther += ionConcentration;
+    for (let i = 0; i < Ions.length; i++) sumOther += _other.concentrations[i] * Ions[i].charge;
     if (sumOther == 0) sumOther = .00001;
 
     let ionRatio = sumSelf / sumOther;
